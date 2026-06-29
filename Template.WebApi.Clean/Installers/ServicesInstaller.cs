@@ -22,6 +22,10 @@ namespace Template.WebApi.Clean.Installers
 			// Manual registrations for domain abstraction / infrastructure implementation pairs
 			services.AddSingleton<IDateTimeService, DateTimeService>();
 			services.AddScoped<ISampleRepository, SampleRepository>();
+
+			// Caching — distributed cache (Redis-ready, falls back to in-memory)
+			services.AddDistributedMemoryCache();
+			services.AddScoped<IResponseCacheService, ResponseCacheService>();
 		}
 	}
 }

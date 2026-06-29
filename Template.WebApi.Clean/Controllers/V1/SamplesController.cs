@@ -4,10 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Template.WebApi.Clean.Application.Handlers.Samples.Commands;
 using Template.WebApi.Clean.Application.Handlers.Samples.Queries;
 using Template.WebApi.Clean.Application.Models.Samples;
+using Template.WebApi.Clean.Cache;
 using Template.WebApi.Clean.Routes;
 
-namespace Template.WebApi.Clean.Controllers
+namespace Template.WebApi.Clean.Controllers.V1
 {
+	/// <summary>
+	/// Sample endpoints for demonstration and template validation.
+	/// </summary>
 	[ApiVersion(ApiRoutes.VersionOne)]
 	[Route(ApiRoutes.Base)]
 	[Produces(ApiRoutes.Produces)]
@@ -17,13 +21,22 @@ namespace Template.WebApi.Clean.Controllers
 	{
 		private readonly IMediator mediator;
 
+		/// <summary>
+		/// SamplesController constructor
+		/// </summary>
+		/// <param name="mediatorService">Cortex.Mediator instance for CQRS dispatch</param>
 		public SamplesController(IMediator mediatorService)
 		{
 			mediator = mediatorService;
 		}
 
+		/// <summary>
+		/// Get all samples.
+		/// </summary>
+		/// <returns>List of <see cref="SampleResponse"/>.</returns>
 		[HttpGet]
 		[MapToApiVersion(ApiRoutes.VersionOne)]
+		[Cached(CacheTimeHelper.SixHundredSeconds)]
 		[ProducesResponseType(typeof(List<SampleResponse>), 200)]
 		[ProducesResponseType(typeof(ProblemDetails), 500)]
 		public async Task<IActionResult> GetAllSamplesAsync()
@@ -32,8 +45,14 @@ namespace Template.WebApi.Clean.Controllers
 			return Ok(result);
 		}
 
+		/// <summary>
+		/// Get a sample by its identifier.
+		/// </summary>
+		/// <param name="id">Sample unique identifier.</param>
+		/// <returns>A <see cref="SampleResponse"/>.</returns>
 		[HttpGet("{id}")]
 		[MapToApiVersion(ApiRoutes.VersionOne)]
+		[Cached(CacheTimeHelper.SixHundredSeconds)]
 		[ProducesResponseType(typeof(SampleResponse), 200)]
 		[ProducesResponseType(typeof(ProblemDetails), 500)]
 		public async Task<IActionResult> GetSampleAsync(Guid id)
@@ -42,6 +61,11 @@ namespace Template.WebApi.Clean.Controllers
 			return Ok(result);
 		}
 
+		/// <summary>
+		/// Create a new sample.
+		/// </summary>
+		/// <param name="request">Sample creation data.</param>
+		/// <returns>The created <see cref="CreateSampleResponse"/> with a 201 status.</returns>
 		[HttpPost]
 		[MapToApiVersion(ApiRoutes.VersionOne)]
 		[ProducesResponseType(typeof(CreateSampleResponse), 201)]

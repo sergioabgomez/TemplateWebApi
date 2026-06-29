@@ -1,3 +1,4 @@
+using Template.WebApi.Clean.Application.Configurations;
 using Template.WebApi.Clean.Installers.Contracts;
 
 namespace Template.WebApi.Clean.Installers
@@ -7,6 +8,7 @@ namespace Template.WebApi.Clean.Installers
 		public void InstallServices(IServiceCollection services, IConfiguration configuration)
 		{
 			services.AddOptions();
+			services.Configure<RedisCacheSettings>(configuration.GetSection("RedisCacheSettings"));
 		}
 	}
 }
