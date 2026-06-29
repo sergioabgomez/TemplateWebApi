@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "sergioabgomez",
+  "classifications": ["Web", "API", "Clean Architecture", "CQRS"],
+  "name": "ASP.NET Core Web API Clean Architecture",
+  "description": "A clean architecture template for ASP.NET Core Web API with CQRS (Cortex.Mediator), Mapster, Dapper, API Versioning, and Scalar UI.",
+  "identity": "Template.WebApi.Clean",
+  "groupIdentity": "Template.WebApi.Clean",
+  "shortName": "webapi-clean",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "Template.WebApi.Clean",
+  "preferNameDirectory": true,
+  "symbols": {
+    "Framework": {
+      "type": "parameter",
+      "description": "The target framework for the project.",
+      "datatype": "choice",
+      "choices": [{ "choice": "net10.0", "description": ".NET 10" }],
+      "defaultValue": "net10.0"
+    },
+    "SkipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "Skips automatic restore on create.",
+      "defaultValue": "false"
+    }
+  }
+}
