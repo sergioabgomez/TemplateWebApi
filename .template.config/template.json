@@ -2,6 +2,12 @@
   "$schema": "http://json.schemastore.org/template",
   "author": "sergioabgomez",
   "classifications": ["Web", "API", "Clean Architecture", "CQRS"],
+  "sources": [
+    {
+      "include": "**/*",
+      "exclude": [".vs/**", "**/[Bb]in/**", "**/[Oo]bj/**"]
+    }
+  ],
   "name": "ASP.NET Core Web API Clean Architecture",
   "description": "A clean architecture template for ASP.NET Core Web API with CQRS (Cortex.Mediator), Mapster, Dapper, API Versioning, and Scalar UI.",
   "identity": "Template.WebApi.Clean",

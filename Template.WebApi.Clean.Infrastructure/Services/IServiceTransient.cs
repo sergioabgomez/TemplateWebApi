@@ -1,4 +1,4 @@
 namespace Template.WebApi.Clean.Infrastructure.Services
 {
-    public interface IServiceTransient { }
+	public interface IServiceTransient { }
 }
