@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Template.WebApi.Clean.Application.Handlers.Samples.Commands;
 using Template.WebApi.Clean.Application.Handlers.Samples.Queries;
 using Template.WebApi.Clean.Application.Models.Samples;
-using Template.WebApi.Clean.Infrastructure.Models;
 using Template.WebApi.Clean.Routes;
 
 namespace Template.WebApi.Clean.Controllers
@@ -26,7 +25,7 @@ namespace Template.WebApi.Clean.Controllers
         [HttpGet("{id}")]
         [MapToApiVersion(ApiRoutes.VersionOne)]
         [ProducesResponseType(typeof(SampleResponse), 200)]
-        [ProducesResponseType(typeof(ErrorModel), 500)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
         public async Task<IActionResult> GetSampleAsync(Guid id)
         {
             var result = await _mediator.SendQueryAsync<GetSampleQuery, SampleResponse>(new GetSampleQuery(id));
@@ -36,8 +35,8 @@ namespace Template.WebApi.Clean.Controllers
         [HttpPost]
         [MapToApiVersion(ApiRoutes.VersionOne)]
         [ProducesResponseType(typeof(CreateSampleResponse), 201)]
-        [ProducesResponseType(typeof(ErrorModel), 400)]
-        [ProducesResponseType(typeof(ErrorModel), 500)]
+        [ProducesResponseType(typeof(ProblemDetails), 400)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
         public async Task<IActionResult> CreateSampleAsync([FromBody] CreateSampleRequest request)
         {
             var result = await _mediator.SendCommandAsync<CreateSampleCommand, CreateSampleResponse>(new CreateSampleCommand(request));

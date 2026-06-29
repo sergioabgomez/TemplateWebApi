@@ -1,20 +1,22 @@
-using System.Net;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Template.WebApi.Clean.Infrastructure.Exceptions;
-using Template.WebApi.Clean.Infrastructure.Models;
+
 namespace Template.WebApi.Clean.Infrastructure.Middlewares
 {
     public class ErrorHandlingMiddleware
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ErrorHandlingMiddleware> _logger;
+
         public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
         {
             _next = next;
             _logger = logger;
         }
+
         public async Task InvokeAsync(HttpContext context)
         {
             try
@@ -26,50 +28,80 @@ namespace Template.WebApi.Clean.Infrastructure.Middlewares
                 await HandleExceptionAsync(context, ex);
             }
         }
+
         private async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var code = HttpStatusCode.InternalServerError;
-            var message = "An error occurred while processing your request.";
-            _logger.LogError(exception, "An unhandled exception occurred.");
+            var problemDetails = new ProblemDetails
+            {
+                Instance = context.Request.Path
+            };
+
+            LogLevel logLevel;
+            int statusCode;
+
             switch (exception)
             {
                 case CustomExceptionProjectException customEx:
-                    code = customEx.StatusCode;
-                    message = customEx.Message;
-                    _logger.LogError(customEx, "Custom exception: {Message}", customEx.Message);
+                    statusCode = (int)customEx.StatusCode;
+                    problemDetails.Title = customEx.Message;
+                    logLevel = LogLevel.Error;
                     break;
                 case BadRequestProjectException:
-                    code = HttpStatusCode.BadRequest;
-                    message = exception.Message;
+                    statusCode = StatusCodes.Status400BadRequest;
+                    problemDetails.Title = "Bad Request";
+                    logLevel = LogLevel.Information;
                     break;
                 case ForbiddenProjectException:
-                    code = HttpStatusCode.Forbidden;
-                    message = exception.Message;
+                    statusCode = StatusCodes.Status403Forbidden;
+                    problemDetails.Title = "Forbidden";
+                    logLevel = LogLevel.Information;
                     break;
                 case NotFoundProjectException:
-                    code = HttpStatusCode.NotFound;
-                    message = exception.Message;
+                    statusCode = StatusCodes.Status404NotFound;
+                    problemDetails.Title = "Not Found";
+                    logLevel = LogLevel.Information;
                     break;
                 case TimeoutProjectException:
-                    code = HttpStatusCode.RequestTimeout;
-                    message = exception.Message;
+                    statusCode = StatusCodes.Status408RequestTimeout;
+                    problemDetails.Title = "Request Timeout";
+                    logLevel = LogLevel.Warning;
                     break;
                 case UnauthorizedAccessProyectException:
-                    code = HttpStatusCode.Unauthorized;
-                    message = exception.Message;
+                    statusCode = StatusCodes.Status401Unauthorized;
+                    problemDetails.Title = "Unauthorized";
+                    logLevel = LogLevel.Information;
+                    break;
+                default:
+                    statusCode = StatusCodes.Status500InternalServerError;
+                    problemDetails.Title = "Internal Server Error";
+                    logLevel = LogLevel.Error;
                     break;
             }
-            var errorModel = new ErrorModel
+
+            problemDetails.Status = statusCode;
+            problemDetails.Detail = exception.Message;
+
+            if (exception is ProjectException projectEx)
             {
-                Code = (int)code,
-                Message = message,
-                Detail = exception is ProjectException projectEx ? projectEx.Detail : null,
-                Module = exception is ProjectException projectEx2 ? projectEx2.Module : null,
-                ValidationError = exception is ProjectException projectEx3 ? projectEx3.ValidationError : null
-            };
-            var result = JsonConvert.SerializeObject(errorModel);
-            context.Response.ContentType = "application/json;charset=utf-8";
-            context.Response.StatusCode = (int)code;
+                if (!string.IsNullOrEmpty(projectEx.Detail))
+                    problemDetails.Detail = projectEx.Detail;
+
+                if (!string.IsNullOrEmpty(projectEx.Module))
+                    problemDetails.Extensions["module"] = projectEx.Module;
+
+                logLevel = projectEx.WithLogError ? LogLevel.Error : LogLevel.Information;
+            }
+
+            _logger.Log(logLevel, exception, "{Title}: {Message}", problemDetails.Title, problemDetails.Detail);
+
+            context.Response.StatusCode = statusCode;
+            context.Response.ContentType = "application/problem+json";
+
+            var result = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
             await context.Response.WriteAsync(result);
         }
     }
